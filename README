@@ -1,0 +1,71 @@
+LabeledFormWithErrors
+=====================
+
+This plugin adds form builder (block-style) helper methods that handle
+errors on fields in a cleaner way than the Rails default.
+
+New helper methods are:
+*   labeled_form_for
+*   labeled_fields_for
+*   labeled_form_remote_for
+*   labeled_remote_form_for
+
+When validations cause errors on a model's fields, LabeledFormWithErrorsBuilder
+wraps the generated elements using this Proc (which you can customize in init.rb)
+
+ActionView::Base.field_error_proc = Proc.new{ |input_or_label, instance| "<span class=\"form_error\">#{input_or_label}</span>" }
+
+
+Example
+=======
+
+# app/models/person.rb
+class Person < ActiveRecord::Base
+  validates_presence_of     :name, :age, :gender
+  validates_numericality_of :age, :message => "must be a number"
+  validates_length_of       :gender, :is => 1, :message => "must be exactly 1 character"
+  validates_format_of       :gender, :with => /^[mf]$/, :allow_nil => true, :message => "must be m or f"
+end
+
+# app/views/edit.html.erb
+<% labeled_form_for(@person) do |f| %>
+  <div>
+    <%= f.label :name %><br />
+    <%= f.text_field :name %>
+  </div>
+  <div>
+    <%= f.label :age %><br />
+    <%= f.text_field :age %>
+  </div>
+  <div>
+    <%= f.label :gender %><br />
+    <%= f.text_field :gender %>
+  </div>
+  <div>
+    <%= f.submit "Update" %>
+  </div>
+<% end %>
+
+Generates:
+<form action="/people/1" class="edit_person" id="edit_person_1" method="post"><div style="margin:0;padding:0"><input name="_method" type="hidden" value="put" /><input name="authenticity_token" type="hidden" value="{auth-token}" /></div>
+  <div>
+    <span class="form_error"><label for="person_name">Name <span>can't be blank</span></label></span><br />
+    <span class="form_error"><input id="person_name" name="person[name]" size="30" type="text" value="" /></span>
+  </div>
+  <div>
+    <span class="form_error"><label for="person_age">Age <span>can't be blank and must be a number</span></label></span><br />
+
+    <span class="form_error"><input id="person_age" name="person[age]" size="30" type="text" /></span>
+  </div>
+  <div>
+    <span class="form_error"><label for="person_gender">Gender <span>can't be blank, must be exactly 1 character, and must be m or f</span></label></span><br />
+    <span class="form_error"><input id="person_gender" name="person[gender]" size="30" type="text" value="" /></span>
+  </div>
+  <div>
+    <input id="person_submit" name="commit" type="submit" value="Update" />
+  </div>
+</form>
+
+
+
+Copyright (c) 2008 Cameron Walters, released under the MIT license
